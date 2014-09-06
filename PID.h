@@ -20,19 +20,19 @@ public:
     _i_limit = i_limit;
   }
   
-  float get_kP() {
+  float get_kP() const {
     return _kP;
   }
   
-  float get_kI() {
+  float get_kI() const {
     return _kI;
   }
   
-  float get_kD() {
+  float get_kD() const {
     return _kD;
   }
   
-  float get_i_limit() {
+  float get_i_limit() const {
     return _i_limit;
   }
   
