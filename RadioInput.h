@@ -1,23 +1,23 @@
 #ifndef __RADIO_INPUT_H__
 #define __RADIO_INPUT_H__
 
-#define PIN_ROLL 5
-#define PIN_PITCH 6
-#define PIN_THR 7
-#define PIN_YAW 8
-#define PIN_AUX1 14
-#define PIN_AUX2 15
-#define PIN_AUX3 16
-#define PIN_AUX4 17
+#define PIN_ROLL  8
+#define PIN_PITCH 7
+#define PIN_THR   6
+#define PIN_YAW   5
+#define PIN_AUX1  14
+#define PIN_AUX2  15
+#define PIN_AUX3  16
+#define PIN_AUX4  17
 
-#define CH_ROLL 0
-#define CH_PITCH 1
-#define CH_THR 2
-#define CH_YAW 3
-#define CH_AUX1 4
-#define CH_AUX2 5
-#define CH_AUX3 6
-#define CH_AUX4 7
+#define CH_ROLL   0
+#define CH_PITCH  1
+#define CH_THR    2
+#define CH_YAW    3
+#define CH_AUX1   4
+#define CH_AUX2   5
+#define CH_AUX3   6
+#define CH_AUX4   7
 
 #include "PinChangeInt/PinChangeInt.h"
 
@@ -82,7 +82,7 @@ private:
   void _read_aux3();
   void _read_aux4();
   
-}
+};
 
 
 #endif

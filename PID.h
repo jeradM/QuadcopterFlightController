@@ -62,6 +62,6 @@ private:
   float     _err_prev;
   float     _d_prev;
   uint32_t  _t_prev;
-}
+};
 
 #endif

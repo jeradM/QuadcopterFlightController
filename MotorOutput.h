@@ -36,6 +36,6 @@
    uint16_t _max_pulse = 125;
    
    uint8_t _constrain_pwm(uint16_t pwm);
- }
+ };
  
  #endif
