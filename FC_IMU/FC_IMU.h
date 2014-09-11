@@ -42,8 +42,8 @@ public:
   bool temp_raw(int16_t *data);
   
   // Read Calculated sensor values
-  bool accel_angle(int16_t *data);
-  bool gyro_rate(int16_t *data);
+  bool accel_angle(float *data);
+  bool gyro_rate(float *data);
   bool temp_degrees(int16_t *data);
   
 private:

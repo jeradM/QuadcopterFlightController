@@ -1,4 +1,3 @@
-#include <Wire.h>
 #include "FC_IMU.h"
 
 FC_IMU::FC_IMU() {
@@ -8,12 +7,16 @@ FC_IMU::FC_IMU() {
 // Set I2C address and init I2C
 void FC_IMU::init(uint8_t slv_addr) {
   _i2c_address = slv_addr;
-  Wire.begin(_i2c_address);
 }
 
 // Set sleep mode on or off
 bool FC_IMU::set_sleep(bool on) {
-  
+  if (on) {
+    return tw.write_bit(_i2c_address, PWR_MGMT_1, 6, 1);
+  }
+  else {
+    return tw.write_bit(_i2c_address, PWR_MGMT_1, 6, 0);
+  }
 }
 
 // Set Gyroscope Sensitivity (resolution)
@@ -37,8 +40,24 @@ bool FC_IMU::accel_set_range(uint8_t fs_sel) {
 // Calculate accelerometer angles
 // data     - buffer to store angles
 // returns  - true on successful read
-bool FC_IMU::accel_angle(int16_t *data) {
-  
+bool FC_IMU::accel_angle(float *data) {
+  int16_t tmp_data[3];
+  float tmp_angle[3];
+  accel_raw(tmp_data);
+  for (int i = 0; i < 3; i++) {
+    tmp_angle[i] = ((float)tmp_data[i])/((float)ACCEL_LSB_0); 
+  }
+  data[0] = atan2(tmp_angle[1], tmp_angle[2]) * (180 / PI);
+  data[1] = atan2(tmp_angle[0], tmp_angle[2]) * (180 / PI);
+  data[2] = atan2(tmp_angle[0], tmp_angle[1]) * (180 / PI);
+}
+
+bool FC_IMU::gyro_rate(float *data) {
+  int16_t tmp_data[3];
+  gyro_raw(tmp_data);
+  for (int i = 0; i < 3; i++) {
+    data[i] = ((float)tmp_data[i])/((float)GYRO_LSB_0); 
+  }
 }
 
 // Read raw accelerometer values
@@ -68,11 +87,11 @@ bool FC_IMU::gyro_raw(int16_t *data) {
   
   if (tw.read_bytes(_i2c_address, GYRO_XOUT_H, 6, tmp_bytes)) {
     //Gyro X - H/L bytes
-    data[0] = (( (uint16_t)(0 | tmp_bytes[0]) ) << 8) | tmp_bytes[1];
+    data[0] = (( (int16_t)(0 | tmp_bytes[0]) ) << 8) | tmp_bytes[1];
     // Gyro Y
-    data[1] = (( (uint16_t)(0 | tmp_bytes[2]) ) << 8) | tmp_bytes[3];
+    data[1] = (( (int16_t)(0 | tmp_bytes[2]) ) << 8) | tmp_bytes[3];
     // Gyro Z
-    data[2] = (( (uint16_t)(0 | tmp_bytes[4]) ) << 8) | tmp_bytes[5];
+    data[2] = (( (int16_t)(0 | tmp_bytes[4]) ) << 8) | tmp_bytes[5];
     
     return true;
   }
