@@ -1,6 +1,8 @@
 #ifndef __PID_H__
 #define __PID_H__
 
+#include "Arduino.h"
+
 class PID {
 public:
   PID(float init_p = 0.0, float init_i = 0.0, float init_d = 0.0, uint16_t init_i_limit = 0) {

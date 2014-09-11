@@ -1,6 +1,8 @@
 #ifndef __RADIO_INPUT_H__
 #define __RADIO_INPUT_H__
 
+#include "Arduino.h"
+
 #define PIN_ROLL  8
 #define PIN_PITCH 7
 #define PIN_THR   6
@@ -24,9 +26,7 @@
 class RadioInput {
 public:
   RadioInput(int num_channels) {
-    for (i = 0; i < num_channels; i++) {
-      _chan_mask |= (1 << i);
-    }
+    _chan_mask = (1 << num_channels) - 1;
   }
   
   // Init radio input

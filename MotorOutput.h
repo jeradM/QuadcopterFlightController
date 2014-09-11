@@ -1,6 +1,8 @@
  #ifndef __MOTOR_OUTPUT_H__
  #define __MOTOR_OUTPUT_H__
  
+ #include "Arduino.h"
+ 
  class MotorOutput {
  public:
    MotorOutput(int num_motors = 4) {

@@ -1,5 +1,5 @@
-#ifndef __IMU_REGISTERS_H__
-#define __IMU_REGISTERS_H__
+#ifndef __FC_IMU_REGISTERS_H__
+#define __FC_IMU_REGISTERS_H__
 
 // ************ Self Test Registers ************
 #define  SELF_TEST_X          0x0D

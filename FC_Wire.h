@@ -1,13 +1,11 @@
-#ifndef __TWO_WIRE_H__
-#define __TWO_WIRE_H__
+#ifndef __FC_WIRE_H__
+#define __FC_WIRE_H__
 
-#include <Wire.h>
+#include "Arduino.h"
 
-class TwoWire {
+class FC_Wire {
 public:
-  TwoWire() {
-    Wire.begin();
-  }
+  FC_Wire();
   
   uint8_t read_bytes(uint8_t dev_addr, uint8_t reg, uint8_t num_bytes, uint8_t *data);
   uint8_t read_byte(uint8_t dev_addr, uint8_t reg, uint8_t *data);
