@@ -21,10 +21,9 @@
 #define CH_AUX3   6
 #define CH_AUX4   7
 
-#include "PinChangeInt/PinChangeInt.h"
-
 class RadioInput {
 public:
+  
   RadioInput(int num_channels) {
     _chan_mask = (1 << num_channels) - 1;
   }
@@ -35,7 +34,7 @@ public:
   // Decode 
   
   // Update with current channel values
-  void update(uint16_t channels[]);
+  void update(uint16_t *channels);
   
   // Set/Unset active channels
   void enable_channel(int ch)   { _chan_mask |=  (1 << ch); }
@@ -57,7 +56,7 @@ public:
   
 private:
   // Private Variables for channel information
-  uint8_t _chan_mask = 0;
+  uint8_t _chan_mask;
   volatile uint16_t _channels_val[8];
   uint16_t _channels_min[8];
   uint16_t _channels_max[8];

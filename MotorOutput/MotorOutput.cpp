@@ -34,6 +34,17 @@ void MotorOutput::init() {
   
 }
 
+// Initialize ESCs at startup
+void MotorOutput::init_esc() {
+  if (!_esc_init) {
+    for (int i = 0; i < _num_motors; i++) {
+      write_pwm(i, 1000);
+    }
+    delay(5000);
+    _esc_init = true;
+  }
+}
+
 // Set PWM pulse width for an output channel
 // -----
 // ARGS
@@ -41,15 +52,29 @@ void MotorOutput::init() {
 // channel:  the motor channel to write (0-3 from FL -> RL CW)
 // in_pusle: the pulse width as read from RC input (1us units)
 void MotorOutput::write_pwm(int channel, uint16_t in_pulse) {
-  uint8_t pwm = _constrain_pwm(in_pulse);
+  if (_armed) {
+    uint8_t pwm = _constrain_pwm(in_pulse);
   
-  switch(channel) {
-    case 0: OCR1A = pwm; break;
-    case 1: OCR1B = pwm; break;
-    case 2: OCR2A = pwm; break;
-    case 3: OCR2B = pwm; break;
+    switch(channel) {
+      case 0: OCR1A = pwm; break;
+      case 1: OCR1B = pwm; break;
+      case 2: OCR2A = pwm; break;
+      case 3: OCR2B = pwm; break;
+    }
   }
-  
+}
+
+// Arm motors
+void MotorOutput::arm() {
+  _armed = true;
+}
+
+// Disarm motors - write min pwm signal to ensure motors off
+void MotorOutput::disarm() {
+  for (int i = 0; i < _num_motors; i++) {
+    write_pwm(i, 1000);
+  }
+  _armed = false;
 }
 
 // Change from 1us units to 16us units and check bounds

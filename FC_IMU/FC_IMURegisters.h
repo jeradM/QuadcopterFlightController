@@ -31,6 +31,16 @@
 // ----------------------------------------------------
 #define  PWR_MGMT_1           0x6B
 #define  PWR_MGMT_2           0x6C
+// ****** Sample Rate Divider ********
+#define  SMPRT_DIV            0x19
+
+// ************************************** User Control *************************************
+// ---------------------------------------- USER_CTRL --------------------------------------
+//    7      6           5            4        3       2            1              0
+// | -- | FIFO_EN | I2C_MST_EN | I2C_IF_DIS | -- | FIFO_RST | I2C_MST_RST | SIG_COND_RESET |
+// -----------------------------------------------------------------------------------------
+#define  USER_CTRL            0x6A  
+#define  WHO_AM_I             0x75 
 
 // ************ FIFO Registers ************
 // ------------------------- FIFO_EN ----------------------
@@ -42,13 +52,15 @@
 #define  FIFO_COUNT_L         0x73
 #define  FIFO_R_W             0x74
 
+// I2C Control/Configuration
+#define  I2C_MST_CTRL         0x24
+
 // ************ Interrupt Registers ************
 #define  INT_PIN_CFG          0x37
 #define  INT_ENABLE           0x38
 #define  INT_STATUS           0x3A
 
 // ************ Sensor Output Registers ************
-// Accelerometer
 #define  ACCEL_XOUT_H         0x3B
 #define  ACCEL_XOUT_L         0x3C
 #define  ACCEL_YOUT_H         0x3D

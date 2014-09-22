@@ -5,6 +5,8 @@
 #include "FC_IMURegisters.h"
 #include <FC_Wire.h>
 
+#define FIFO_INT    0
+
 #define ACCEL_LSB_0 16384
 #define ACCEL_LSB_1 8192
 #define ACCEL_LSB_2 4096
@@ -18,11 +20,33 @@
 class FC_IMU {
   
 public:
+  volatile bool sensor_update_int;
+  
   FC_IMU();
+  FC_IMU(uint8_t addr);
   
-  void init(uint8_t slv_addr);
-  
+  // Configuration
+  void init();
   bool set_sleep(bool sleep);
+  bool set_clock_source(uint8_t clk);
+  bool set_clock_divider(uint8_t div);
+  bool reset();
+  
+  // FIFO
+  bool fifo_enable(bool en);
+  bool fifo_reset();
+  bool fifo_enable_data(uint8_t fifo_en_mask = 0x78);
+  uint16_t fifo_get_count();
+  uint16_t fifo_read(uint8_t num_bytes, uint8_t *data);
+  uint16_t fifo_read_packets(uint8_t num_packets, uint16_t *data);
+  
+  // I2C
+  bool i2c_mstr_enable(bool en);
+  bool i2c_mstr_reset();
+  
+  // Interrupts
+  bool enable_int_dataready(bool en);
+  uint8_t int_status();
   
   // Set sensitivity for sensors
   bool gyro_set_range(uint8_t fs_sel);
@@ -36,21 +60,37 @@ public:
   bool fifo_enable_mask(uint8_t mask);
   bool fifo_enable_all();
   
-  // Raw sensor values
-  bool accel_raw(int16_t *data);
-  bool gyro_raw(int16_t *data);
-  bool temp_raw(int16_t *data);
+  // Latest Sensor Readings
+  bool update_sensors();
+  void set_baseline();
   
-  // Read Calculated sensor values
-  bool accel_angle(float *data);
-  bool gyro_rate(float *data);
-  bool temp_degrees(int16_t *data);
+  int16_t* get_accel() {
+    return _accel_data;
+  }
+  
+  int16_t* get_gyro() {
+    return _gyro_data;
+  }
+
   
 private:
   FC_Wire tw;
   uint8_t _i2c_address;
+  int16_t _accel_data[3];
+  int16_t _gyro_data[3];
   uint8_t _gyro_fs_sel;
   uint8_t _accel_fs_sel;
+  
+  int16_t _accel_baseline[3];
+  int16_t _gyro_baseline[3];
+  
+  bool accel_raw(int16_t *data);
+  bool gyro_raw(int16_t *data);
+  bool temp_raw(int16_t *data);
+  
+  bool accel_angle(float *data);
+  bool gyro_rate(float *data);
+  bool temp_degrees(int16_t *data);
 };
 
 #endif

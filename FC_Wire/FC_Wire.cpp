@@ -17,7 +17,7 @@ uint8_t FC_Wire::read_bytes(uint8_t dev_addr, uint8_t reg, uint8_t length, uint8
   Wire.beginTransmission(dev_addr);
   Wire.write(reg);
   Wire.endTransmission();
-  Wire.beginTransmission(dev_addr);
+  //Wire.beginTransmission(dev_addr);
   Wire.requestFrom(dev_addr, length);
   
   while (Wire.available()) {
@@ -34,6 +34,25 @@ uint8_t FC_Wire::read_bytes(uint8_t dev_addr, uint8_t reg, uint8_t length, uint8
 // returns   - 1 for success - 0 means read failed
 uint8_t FC_Wire::read_byte(uint8_t dev_addr, uint8_t reg, uint8_t *data) {
   return read_bytes(dev_addr, reg, 1, data);
+}
+
+// Read 16-bit Packets from Slave Device
+// dev_addr  - I2C address of target device
+// reg       - Register address where reading should begin
+// length    - Number of packets to attempt to read
+// data      - Pointer to Buffer to store read data
+// returns   - the number of packets read
+uint8_t FC_Wire::read_packets(uint8_t dev_addr, uint8_t reg, uint8_t length, uint16_t *data) {
+  uint8_t tmp_data[64];
+  uint8_t bytes_read = read_bytes(dev_addr, reg, (length * 2), tmp_data);
+  if (bytes_read == (length * 2)) {
+    for (int i = 0; i < length; i++) {
+      data[i] = (((uint16_t)tmp_data[i * 2]) << 8) | tmp_data[(i * 2) + 1];
+    }
+    return bytes_read / 2;
+  }
+  
+  return 0;
 }
 
 // Read multiple individual bits from slave device
@@ -83,7 +102,7 @@ bool FC_Wire::write_bytes(uint8_t dev_addr, uint8_t reg, uint8_t length, uint8_t
   Wire.write((uint8_t) reg);
   
   for (int i = 0; i < length; i++) {
-    Wire.write((uint8_t) data[i]);
+    Wire.write(data[i]);
   }
   
   return (Wire.endTransmission() == 0); // 0 means success
@@ -109,8 +128,11 @@ bool FC_Wire::write_bits(uint8_t dev_addr, uint8_t reg, uint8_t start, uint8_t l
   uint8_t b;
   
   if (read_byte(dev_addr, reg, &b) == 1) {
-    data <<= ((start - length) + 1);
-    b &= data;
+    uint8_t bitmask = ((1 << length) - 1) << (start + 1 - length);
+    data <<= (start + 1 - length);
+    data &= bitmask;
+    b &= ~(bitmask);
+    b |= data;
     return write_byte(dev_addr, reg, b);
   }
   
@@ -129,7 +151,12 @@ bool FC_Wire::write_bit(uint8_t dev_addr, uint8_t reg, uint8_t bit, uint8_t data
   if (data > 1) return false;
   
   if (read_byte(dev_addr, reg, &b) == 1) {
-    b &= (data << bit);
+    if (data == 0) {
+      b &= ~(1 << bit);
+    }
+    else {
+      b |= (1 << bit);
+    }
     return write_byte(dev_addr, reg, b);
   }
   

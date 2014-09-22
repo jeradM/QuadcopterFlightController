@@ -1,4 +1,5 @@
 #include "RadioInput.h"
+#include "PinChangeInt/PinChangeInt.h"
 
 void RadioInput::init() {
   PCintPort::attachInterrupt(PIN_ROLL, _read_roll, CHANGE);
@@ -11,7 +12,7 @@ void RadioInput::init() {
   PCintPort::attachInterrupt(PIN_AUX4, _read_aux4, CHANGE);
 }
 
-void RadioInput::update(uint16_t channels[]) {
+void RadioInput::update(uint16_t *channels) {
   for (int i = 0; i < 8; i++) {
     channels[i] = _channel_val[i];
   }
