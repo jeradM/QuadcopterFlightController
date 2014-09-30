@@ -21,16 +21,17 @@ public:
     _z = nz;
   }
   
+  FC_Quaternion operator+(const FC_Quaternion &q1);
   FC_Quaternion cross_with(FC_Quaternion q);
   FC_Quaternion times_scalar(float s);
   void normailze();
   FC_Quaternion conjugate();
   FC_Quaternion rate_derivative(float rx, float ry, float rz);
   
-  float w;
-  float x;
-  float y;
-  float z;
+  float _w;
+  float _x;
+  float _y;
+  float _z;
   
 private:
 };

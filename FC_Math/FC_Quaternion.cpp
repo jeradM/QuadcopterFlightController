@@ -1,5 +1,9 @@
 #include "FC_Quaternion.h"
 
+FC_Quaternion FC_Quaternion::operator+(const FC_Quaternion &q1) {
+  return FC_Quaternion(_w + q1._w, _x + q1._x, _y + q1._y, _z + q1._z);
+}
+
 FC_Quaternion FC_Quaternion::cross_with(FC_Quaternion q) {
   float nw = (w * q.w) - (x * q.x) - (y * q.y) - (z * q.z);
   float nx = (w * q.x) + (x * q.w) + (y * q.z) - (z * q.y);

@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "FC_IMURegisters.h"
 #include <FC_Wire.h>
+#include "FC_Quaternion.h"
 
 #define FIFO_INT    0
 
@@ -62,6 +63,7 @@ public:
   
   // Latest Sensor Readings
   bool update_sensors();
+  void update_quaternion();
   void set_baseline();
   
   int16_t* get_accel() {
@@ -71,13 +73,22 @@ public:
   int16_t* get_gyro() {
     return _gyro_data;
   }
+  
+  FC_Quaternion get_quaternion() {
+    return _quaternion;
+  }
 
   
 private:
-  FC_Wire tw;
+  FC_Wire _tw;
+  FC_Quaternion _quaternion;
+  uint32_t _time_prev;
+  uint16_t _dt;
   uint8_t _i2c_address;
   int16_t _accel_data[3];
   int16_t _gyro_data[3];
+  float _accel_angle[3];
+  float _gyro_rate[3];
   uint8_t _gyro_fs_sel;
   uint8_t _accel_fs_sel;
   
@@ -88,8 +99,8 @@ private:
   bool gyro_raw(int16_t *data);
   bool temp_raw(int16_t *data);
   
-  bool accel_angle(float *data);
-  bool gyro_rate(float *data);
+  bool accel_angle();
+  bool gyro_rate();
   bool temp_degrees(int16_t *data);
 };
 
