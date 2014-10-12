@@ -5,6 +5,7 @@
 #include "FC_IMURegisters.h"
 #include <FC_Wire.h>
 #include "FC_Quaternion.h"
+#include "FC_Math.h"
 
 #define FIFO_INT    0
 
@@ -22,6 +23,7 @@ class FC_IMU {
   
 public:
   volatile bool sensor_update_int;
+  FC_Quaternion _quaternion;
   
   FC_IMU();
   FC_IMU(uint8_t addr);
@@ -73,15 +75,10 @@ public:
   int16_t* get_gyro() {
     return _gyro_data;
   }
-  
-  FC_Quaternion get_quaternion() {
-    return _quaternion;
-  }
 
   
 private:
   FC_Wire _tw;
-  FC_Quaternion _quaternion;
   uint32_t _time_prev;
   uint16_t _dt;
   uint8_t _i2c_address;

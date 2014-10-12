@@ -30,12 +30,16 @@ void FlightController::calibrate_radio() {
 }
 
 void FlightController::update() {
+  _radio.update(_radio_prev);
+  _parse_aux();
+  
   if (_imu.sensor_update_int) {
     _imu.update_sensors();
     _imu.sensor_update_int = false;
   }
-  _radio.update(_radio_prev);
-  _parse_aux();
+
+  
+  
 }
 
 void FlightController::_parse_aux() {

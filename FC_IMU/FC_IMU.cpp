@@ -137,6 +137,11 @@ bool FC_IMU::update_sensors() {
   _gyro_data[0]   =  ((((int16_t)data[8])  << 8) | data[9])  - _gyro_baseline[0];
   _gyro_data[1]   =  ((((int16_t)data[10]) << 8) | data[11]) - _gyro_baseline[1];
   _gyro_data[2]   =  ((((int16_t)data[12]) << 8) | data[13]) - _gyro_baseline[2]; 
+  
+  gyro_rate();
+  accel_angle();
+  
+  update_quaternion();
 }
 
 void FC_IMU::update_quaternion() {
@@ -147,11 +152,8 @@ void FC_IMU::update_quaternion() {
     uint32_t time = millis();
     _dt = time - _time_prev;
     _time_prev = time;
-    
-    FC_Quaternion dQ = _quaternion.rate_derivative(_gyro_rate[0], _gyro_rate[1], _gyro_rate[2]);
-    dQ *= (float)(_dt / 1000);
-    _quaternion.add(dQ);
-    
+    _dt /= 1000;
+    _quaternion.update(_gyro_rate, _accel_angle, dt); 
   }
 }
 
@@ -185,18 +187,34 @@ void FC_IMU::set_baseline() {
 // data     - buffer to store angles
 // returns  - true on successful read
 bool FC_IMU::accel_angle() {
-  float tmp_angle[3];
-  for (int i = 0; i < 3; i++) {
-    tmp_angle[i] = ((float)tmp_data[i])/((float)ACCEL_LSB_0); 
+  float alsb;
+  
+  switch(_accel_fs_sel) {
+    case 0:   alsb = (float)ACCEL_LSB_0; break;
+    case 1:   alsb = (float)ACCEL_LSB_1; break;
+    case 2:   alsb = (float)ACCEL_LSB_2; break;
+    case 3:   alsb = (float)ACCEL_LSB_3; break;
+    default:  alsb = (float)ACCEL_LSB_0; break;
   }
-  data[0] = atan2(tmp_angle[1], tmp_angle[2]) * (180 / PI);
-  data[1] = atan2(tmp_angle[0], tmp_angle[2]) * (180 / PI);
-  data[2] = atan2(tmp_angle[0], tmp_angle[1]) * (180 / PI);
+  
+  for (int i = 0; i < 3; i++) {
+    _accel_angle[i] = ((float)_accel_data[i])/alsb;
+  }
 }
 
 bool FC_IMU::gyro_rate() {
+  float glsb;
+  
+  switch(_gyro_fs_sel) {
+    case 0:   glsb = GYRO_LSB_0; break;
+    case 1:   glsb = GYRO_LSB_1; break;
+    case 1:   glsb = GYRO_LSB_2; break;
+    case 2:   glsb = GYRO_LSB_3; break;
+    default:  glsb = GYRO_LSB_0;
+  }
+  
   for (int i = 0; i < 3; i++) {
-    _gyro_rate[i] = (((float)_gyro_data[i])/((float)GYRO_LSB_0)) * (180 / PI);
+    _gyro_rate[i] = radians(((float)_gyro_data[i])/glsb);
   }
   _gyro_rate[1] *= -1.0f;
 }
