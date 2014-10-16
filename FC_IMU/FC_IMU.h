@@ -4,8 +4,8 @@
 #include "Arduino.h"
 #include "FC_IMURegisters.h"
 #include <FC_Wire.h>
-#include "FC_Quaternion.h"
-#include "FC_Math.h"
+#include <FC_Quaternion.h>
+#include <FC_Math.h>
 
 #define FIFO_INT    0
 
@@ -19,10 +19,18 @@
 #define GYRO_LSB_2  32.8
 #define GYRO_LSB_3  16.4
 
+extern volatile bool sensor_update_int;
+
 class FC_IMU {
   
 public:
-  volatile bool sensor_update_int;
+  uint32_t _time_prev;
+  float _accel_angle[3];
+  float _gyro_rate[3];
+  int16_t _accel_baseline[3];
+  int16_t _gyro_baseline[3];
+  int16_t _accel_data[3];
+  int16_t _gyro_data[3];
   FC_Quaternion _quaternion;
   
   FC_IMU();
@@ -79,18 +87,13 @@ public:
   
 private:
   FC_Wire _tw;
-  uint32_t _time_prev;
-  uint16_t _dt;
+  float _dt;
   uint8_t _i2c_address;
-  int16_t _accel_data[3];
-  int16_t _gyro_data[3];
-  float _accel_angle[3];
-  float _gyro_rate[3];
+
+
   uint8_t _gyro_fs_sel;
   uint8_t _accel_fs_sel;
-  
-  int16_t _accel_baseline[3];
-  int16_t _gyro_baseline[3];
+
   
   bool accel_raw(int16_t *data);
   bool gyro_raw(int16_t *data);

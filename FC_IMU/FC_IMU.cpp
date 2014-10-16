@@ -1,5 +1,7 @@
 #include "FC_IMU.h"
 
+volatile bool sensor_update_int = false;
+
 FC_IMU::FC_IMU() {
   _i2c_address = 0x68;
 }
@@ -133,7 +135,7 @@ bool FC_IMU::update_sensors() {
   
   _accel_data[0]  =  ((((int16_t)data[0])  << 8) | data[1])  - _accel_baseline[0];
   _accel_data[1]  =  ((((int16_t)data[2])  << 8) | data[3])  - _accel_baseline[1];
-  _accel_data[2]  =  ((((int16_t)data[4])  << 8) | data[5])  - _accel_baseline[2];
+  _accel_data[2]  =  ((((int16_t)data[4])  << 8) | data[5])  - _accel_baseline[2] + (int16_t)16384;
   _gyro_data[0]   =  ((((int16_t)data[8])  << 8) | data[9])  - _gyro_baseline[0];
   _gyro_data[1]   =  ((((int16_t)data[10]) << 8) | data[11]) - _gyro_baseline[1];
   _gyro_data[2]   =  ((((int16_t)data[12]) << 8) | data[13]) - _gyro_baseline[2]; 
@@ -150,36 +152,58 @@ void FC_IMU::update_quaternion() {
   }
   else {
     uint32_t time = millis();
-    _dt = time - _time_prev;
+    _dt = (float)(time - _time_prev);
     _time_prev = time;
-    _dt /= 1000;
-    _quaternion.update(_gyro_rate, _accel_angle, dt); 
+    _dt /= 1000.0f;
+    _quaternion.update_mahoney(_gyro_rate, _accel_angle, _dt); 
   }
 }
 
 // Set baseline MPU readings at init
 void FC_IMU::set_baseline() {
-  int16_t tmp_acc[3];
-  int16_t tmp_gyro[3];
+  int16_t tmp_acc[3] = {0, 0, 0};
+  int16_t tmp_gyro[3] = {0, 0, 0};
   
-  int32_t acc_tot[3];
-  int32_t gyro_tot[3];
+  int32_t acc_tot[3] = {0, 0, 0};
+  int32_t gyro_tot[3] = {0, 0, 0};
   
-  for (int i = 10; i --> 0;) {
+  for (int i = 20; i --> 0;) {
     accel_raw(tmp_acc);
     gyro_raw(tmp_gyro);
     
     for (int j = 0; j < 3; j++) {
-      acc_tot[j]  += tmp_acc[j];
-      gyro_tot[j] += tmp_gyro[j];
+      acc_tot[j]  += (int32_t)tmp_acc[j];
+      gyro_tot[j] += (int32_t)tmp_gyro[j];
     }
-    
+    // Serial.print("Acc: ");
+    // Serial.print(tmp_acc[0]);
+    // Serial.print(" ");
+    // Serial.print(tmp_acc[1]);
+    // Serial.print(" ");
+    // Serial.print(tmp_acc[2]);
+    // Serial.print(" Gyro: ");
+    // Serial.print(tmp_gyro[0]);
+    // Serial.print(" ");
+    // Serial.print(tmp_gyro[1]);
+    // Serial.print(" ");
+    // Serial.println(tmp_gyro[2]);
     delay(100);
   }
-  
+  // Serial.print("Acc: ");
+  // Serial.print(acc_tot[0]);
+  // Serial.print(" ");
+  // Serial.print(acc_tot[1]);
+  // Serial.print(" ");
+  // Serial.print(acc_tot[2]);
+  // Serial.print(" Gyro: ");
+  // Serial.print(gyro_tot[0]);
+  // Serial.print(" ");
+  // Serial.print(gyro_tot[1]);
+  // Serial.print(" ");
+  // Serial.println(gyro_tot[2]);
   for (int i = 0; i < 3; i++) {
-    _accel_baseline[i] = (int16_t)(acc_tot[i] / 10);
-    _gyro_baseline[i]  = (int16_t)(gyro_tot[i] / 10);
+    _accel_baseline[i] = (int16_t)(acc_tot[i] / 20);
+    _gyro_baseline[i]  = (int16_t)(gyro_tot[i] / 20);
   }
 }
 
@@ -200,23 +224,26 @@ bool FC_IMU::accel_angle() {
   for (int i = 0; i < 3; i++) {
     _accel_angle[i] = ((float)_accel_data[i])/alsb;
   }
+  //_accel_angle[0] *= -1.0f;
+  // _accel_angle[1] *= -1.0f;
+  // _accel_angle[2] *= -1.0f;
 }
 
 bool FC_IMU::gyro_rate() {
   float glsb;
   
   switch(_gyro_fs_sel) {
-    case 0:   glsb = GYRO_LSB_0; break;
-    case 1:   glsb = GYRO_LSB_1; break;
-    case 1:   glsb = GYRO_LSB_2; break;
-    case 2:   glsb = GYRO_LSB_3; break;
-    default:  glsb = GYRO_LSB_0;
+    case 0:   glsb = (float)GYRO_LSB_0; break;
+    case 1:   glsb = (float)GYRO_LSB_1; break;
+    case 2:   glsb = (float)GYRO_LSB_2; break;
+    case 3:   glsb = (float)GYRO_LSB_3; break;
+    default:  glsb = (float)GYRO_LSB_0;
   }
   
   for (int i = 0; i < 3; i++) {
     _gyro_rate[i] = radians(((float)_gyro_data[i])/glsb);
   }
-  _gyro_rate[1] *= -1.0f;
+  //_gyro_rate[1] *= -1.0f;
 }
 
 // Read raw accelerometer values

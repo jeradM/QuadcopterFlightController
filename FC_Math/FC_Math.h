@@ -10,8 +10,5 @@
 #define RAD_DEG 57.295779513082320876798154814105f
 
 float asin_safe(float val);
-float square(float val);
-float radians(float deg);
-float degrees(float rads);
 
 #endif

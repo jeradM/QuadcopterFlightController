@@ -2,7 +2,7 @@
 #define _FC_QUATERNION_H_
 
 #include "Arduino.h"
-#include "FC_Math.h"
+#include <FC_Math.h>
 
 #define TOLERANCE  0.00001f
 
@@ -15,17 +15,18 @@ public:
     z = 0.0;
   }
   
-  FC_Quaternion(nw, nx, ny, nz) {
+  FC_Quaternion(float nw, float nx, float ny, float nz) {
     w = nw;
     x = nx;
     y = ny;
     z = nz;
   }
   
-  void update(float *w, float *a, float dt);
+  void update(float *dw, float *a, float dt);
+  void update_mahoney(float *dw, float *a, float dt);
   
   FC_Quaternion times(FC_Quaternion q);
-  FC_Quaternion plus(FC_Quaternion q)
+  FC_Quaternion plus(FC_Quaternion q);
   FC_Quaternion times_scalar(float s);
   void normalize();
   FC_Quaternion conjugate();
@@ -36,7 +37,6 @@ public:
   float y;
   float z;
   
-private:
 };
 
 #endif

@@ -1,4 +1,7 @@
 #include "FlightController.h"
+#include "FC_IMU.h"
+
+extern volatile bool sensor_update_int;
 
 void FlightController::init() {
   DDRB |= (1 << 4) | (1 << 5);
@@ -33,9 +36,9 @@ void FlightController::update() {
   _radio.update(_radio_prev);
   _parse_aux();
   
-  if (_imu.sensor_update_int) {
+  if (sensor_update_int) {
     _imu.update_sensors();
-    _imu.sensor_update_int = false;
+    sensor_update_int = false;
   }
 
   

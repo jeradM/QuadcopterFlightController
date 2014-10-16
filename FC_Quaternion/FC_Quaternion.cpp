@@ -1,27 +1,27 @@
 #include "FC_Quaternion.h"
-#include "FC_Math.h"
+#include <FC_Math.h>
 #include <math.h>
 
 // Filter to update Quaternion
 // w  - Angular velocity from gyro (rad.s-1)
 // a  - Vector from accelerometer
 // dt -  Delta time since last update
-void FC_Quaternion::update(float *w, float *a, float dt) {
+void FC_Quaternion::update(float *dw, float *a, float dt) {
   // Angular Velocity in Quaternion form
-  FC_Quaternion qW(0, w[0], w[1], w[2]);
-  
+  FC_Quaternion qW(0, dw[0], dw[1], dw[2]);
+
   // Normalize accel vector
   float an[3];
-  float a_norm = sqrt(square(a[0]) + squarea[1] + squarea[2]);
+  float a_norm = sqrt(square(a[0]) + square(a[1]) + square(a[2]));
   an[0] = a[0] / a_norm;
   an[1] = a[1] / a_norm;
   an[2] = a[2] / a_norm;
-  
+
   // Compute Objective Function
   float f1 = (2.0f * ((x * z) - (w * y))) - an[0];
   float f2 = (2.0f * ((w * x) + (y * z))) - an[1];
-  float f3 = (1.0f - (2.0f * (square(x) - square(y)))) - an[2];
-  
+  float f3 = (1.0f - (2.0f * (square(x) + square(y)))) - an[2];
+
   // Compute Jacobian Matrix
   float j11_24 = 2.0f * y;
   float j12_23 = 2.0f * z;
@@ -29,26 +29,33 @@ void FC_Quaternion::update(float *w, float *a, float dt) {
   float j14_21 = 2.0f * x;
   float j32    = 4.0f * x;
   float j33    = 4.0f * y;
-  
+
   // Compute Gradient Matrix (Jacobian_Transpose * Objective)
   float grad_matrix_1 = (j14_21 * f2) - (j11_24 * f1);  
   float grad_matrix_2 = (j12_23 * f1) + (j13_22 * f2) - (j32 * f3);
   float grad_matrix_3 = (j12_23 * f2) - (j13_22 * f1) - (j33 * f3);
   float grad_matrix_4 = (j14_21 * f1) + (j11_24 * f2);
-  
+
   // Normalized Gradient Quaternion
   FC_Quaternion q_grad(grad_matrix_1, grad_matrix_2, grad_matrix_3, grad_matrix_4);
   q_grad.normalize();
   
+  // Serial.print("w: ");
+  // Serial.print(q_grad.w, 5);
+  // Serial.print(" x: ");
+  // Serial.print(q_grad.x, 5);
+  // Serial.print(" y: ");
+  // Serial.print(q_grad.y, 5);
+  // Serial.print(" z: ");
+  // Serial.println(q_grad.z, 5);
+
   // Quaternion derivative of angular velocity
-  FC_Quaternion rate_der = times_scalar(0.5f).times(qW);
-  
-  // Gyro error factor
-  float beta = (-1.0f) * (sqrt(3.0f / 4.0f) * radians(2.0f));
-  
+  FC_Quaternion rate_der = times(qW).times_scalar(0.5f);
+  float beta = (-1.0f) * (sqrt(3.0f / 4.0f) * radians(.001f));
+
   // Calculated Quaternion Derivative (gyro/accel)
   FC_Quaternion deriv = rate_der.plus(q_grad.times_scalar(beta)).times_scalar(dt);
-  
+
   // Integrate Attitude Quaternion and normalize
   w += deriv.w;
   x += deriv.x;
@@ -57,6 +64,39 @@ void FC_Quaternion::update(float *w, float *a, float dt) {
   normalize();
   
 }
+
+void FC_Quaternion::update_mahoney(float *dw, float *a, float dt) {
+  float kp = 5.0f * 0.5f;
+  FC_Quaternion qW(0.0f, dw[0], dw[1], dw[2]);
+  
+  float an[3];
+  float anorm = sqrt(square(a[0]) + square(a[1]) + square(a[2]));
+  an[0] = a[0] / anorm;
+  an[1] = a[1] / anorm;
+  an[2] = a[2] / anorm;
+  
+  float vx = x * z - w * y;
+  float vy = w * x + y * z;
+  float vz = square(w) - 0.5f + square(z);
+  
+  float errx = an[1] * vz - an[2] * vy;
+  float erry = an[2] * vx - an[0] * vz;
+  float errz = an[0] * vy - an[1] * vx;
+  
+  FC_Quaternion err(0.0f, errx, erry, errz);
+  qW = qW.plus(err.times_scalar(kp));
+  
+  qW = qW.times_scalar(0.5f * dt);
+  FC_Quaternion deriv = times(qW);
+  
+  w += deriv.w;
+  x += deriv.x;
+  y += deriv.y;
+  z += deriv.z;
+  normalize();
+  
+}
+
 
 // Quaternion Multiplication
 // Q1 = (s, V) * Q2 = (t, U)
