@@ -22,7 +22,13 @@
 #define CH_AUX4   7
 
 class RadioInput {
-public:
+public:  
+  
+  uint16_t _channels_min[8];
+  uint16_t _channels_max[8];
+  // Private Variables for channel information
+  uint8_t _chan_mask;
+  volatile uint16_t _channels_val[8];
   
   RadioInput(int num_channels) {
     _chan_mask = (1 << num_channels) - 1;
@@ -46,6 +52,16 @@ public:
     _chan_mask = 0 | mask;
   }
   
+  // Pin Change Interrupt methods - update _channel_val array
+  void _read_throttle();
+  void _read_yaw();
+  void _read_pitch();
+  void _read_roll();
+  void _read_aux1();
+  void _read_aux2(); 
+  void _read_aux3();
+  void _read_aux4();
+  
   // Set min/max pulse width for a channel
   // These should be the pulses your transmitter outputs
   void calibrate_channel(int chan, uint16_t min, uint16_t max) {
@@ -55,11 +71,6 @@ public:
   
   
 private:
-  // Private Variables for channel information
-  uint8_t _chan_mask;
-  volatile uint16_t _channels_val[8];
-  uint16_t _channels_min[8];
-  uint16_t _channels_max[8];
   
   // Pulse width measurement variables
   uint32_t _thr_start;
@@ -71,17 +82,13 @@ private:
   uint32_t _aux3_start;
   uint32_t _aux4_start;
   
-  // Pin Change Interrupt methods - update _channel_val array
-  void _read_throttle();
-  void _read_yaw();
-  void _read_pitch();
-  void _read_roll();
-  void _read_aux1();
-  void _read_aux2(); 
-  void _read_aux3();
-  void _read_aux4();
-  
 };
 
+extern RadioInput* _radio_ref;
+
+void roll_int();
+void pitch_int();
+void thr_int();
+void yaw_int();
 
 #endif

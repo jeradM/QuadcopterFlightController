@@ -76,12 +76,12 @@ public:
   void update_quaternion();
   void set_baseline();
   
-  int16_t* get_accel() {
-    return _accel_data;
+  float* get_accel() {
+    return _accel_angle;
   }
   
-  int16_t* get_gyro() {
-    return _gyro_data;
+  float* get_gyro() {
+    return _gyro_rate;
   }
 
   

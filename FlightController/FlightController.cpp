@@ -36,11 +36,34 @@ void FlightController::update() {
   _radio.update(_radio_prev);
   _parse_aux();
   
+  long in_thr = _radio_prev[CH_THR];
+  long in_pit = map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
+  long in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
+  long in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
+  
   if (sensor_update_int) {
     _imu.update_sensors();
     sensor_update_int = false;
   }
 
+  float gyro_rate[3] = _imu.get_gyro();
+  
+  if (in_thr > _radio._channels_min[CH_THR] + 100) {
+    float pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
+    float rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
+    float yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
+    
+    _motors.write_pwm(MOTOR_FL, in_thr - (uint16_t)(pit_err + rol_err - yaw_err);
+    _motors.write_pwm(MOTOR_FR, in_thr - (uint16_t)(pit_err - rol_err + yaw_err);
+    _motors.write_pwm(MOTOR_RL, in_thr + (uint16_t)(pit_err + rol_err + yaw_err);
+    _motors.write_pwm(MOTOR_RR, in_thr + (uint16_t)(pit_err - rol_err - yaw_err);
+  }
+  else {
+    _motors.write_pwm(MOTOR_FL, 1000);
+    _motors.write_pwm(MOTOR_FR, 1000);
+    _motors.write_pwm(MOTOR_RL, 1000);
+    _motors.write_pwm(MOTOR_RR, 1000);
+  }
   
   
 }

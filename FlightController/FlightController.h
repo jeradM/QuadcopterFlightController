@@ -1,10 +1,10 @@
 #ifndef __FLIGHT_CONTROLLER_H__
 #define __FLIGHT_CONTROLLER_H__
 
-#include "MotorOutput.h"
-#include "RadioInput.h"
-#include "PID.h"
-#include "FC_IMU.h"
+#include <MotorOutput.h>
+#include <RadioInput.h>
+#include <PID.h>
+#include <FC_IMU.h>
 
 #define LED_BLUE            12
 #define LED_GREEN           13
@@ -47,6 +47,9 @@
 
 class FlightController {
 public:
+  MotorOutput _motors;
+  RadioInput  _radio(8);
+  
   FlightController() {}
   
   void init();
@@ -60,8 +63,6 @@ public:
 private:
   PID _pids[6];
   FC_IMU _imu;
-  MotorOutput _motors;
-  RadioInput  _radio;
   
   int16_t _accel[3];
   int16_t _gyro[3];
@@ -79,5 +80,6 @@ private:
   
 };
 
+RadioInput *_radio_ref = &_radio;
 
 #endif

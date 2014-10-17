@@ -1,26 +1,28 @@
 #include "RadioInput.h"
-#include "PinChangeInt/PinChangeInt.h"
+#include <PinChangeInt.h>
+
+extern RadioInput* _radio_ref;
 
 void RadioInput::init() {
-  PCintPort::attachInterrupt(PIN_ROLL, _read_roll, CHANGE);
-  PCintPort::attachInterrupt(PIN_PITCH, _read_roll, CHANGE);
-  PCintPort::attachInterrupt(PIN_THR, _read_roll, CHANGE);
-  PCintPort::attachInterrupt(PIN_YAW, _read_roll, CHANGE);
-  PCintPort::attachInterrupt(PIN_AUX1, _read_aux1, CHANGE);
-  PCintPort::attachInterrupt(PIN_AUX2, _read_aux2, CHANGE);
-  PCintPort::attachInterrupt(PIN_AUX3, _read_aux3, CHANGE);
-  PCintPort::attachInterrupt(PIN_AUX4, _read_aux4, CHANGE);
+  PCintPort::attachInterrupt(PIN_PITCH, pitch_int, CHANGE);
+  PCintPort::attachInterrupt(PIN_ROLL, roll_int, CHANGE);
+  PCintPort::attachInterrupt(PIN_THR, thr_int, CHANGE);
+  PCintPort::attachInterrupt(PIN_YAW, yaw_int, CHANGE);
+  // PCintPort::attachInterrupt(PIN_AUX1, _read_aux1, CHANGE);
+  // PCintPort::attachInterrupt(PIN_AUX2, _read_aux2, CHANGE);
+  // PCintPort::attachInterrupt(PIN_AUX3, _read_aux3, CHANGE);
+  // PCintPort::attachInterrupt(PIN_AUX4, _read_aux4, CHANGE);
 }
 
 void RadioInput::update(uint16_t *channels) {
   for (int i = 0; i < 8; i++) {
-    channels[i] = _channel_val[i];
+    channels[i] = _channels_val[i];
   }
 }
 
 // Update Throttle Pulse Width
 void RadioInput::_read_throttle() {
-  if (_chan_mask & CH_THR) {
+  if (_chan_mask & (1 << CH_THR)) {
     if (digitalRead(PIN_THR) == HIGH) {
       _thr_start = micros();
     }
@@ -32,7 +34,7 @@ void RadioInput::_read_throttle() {
 
 // Update yaw Pulse Width
 void RadioInput::_read_yaw() {
-  if (_chan_mask & CH_YAW) {
+  if (_chan_mask & (1 << CH_YAW)) {
     if (digitalRead(PIN_YAW) == HIGH) {
       _yaw_start = micros();
     }
@@ -44,7 +46,7 @@ void RadioInput::_read_yaw() {
 
 // Update Pitch Pulse Width
 void RadioInput::_read_pitch() {
-  if (_chan_mask & CH_PITCH) {
+  if (_chan_mask & (1 << CH_PITCH)) {
     if (digitalRead(PIN_PITCH) == HIGH) {
       _pitch_start = micros();
     }
@@ -56,7 +58,7 @@ void RadioInput::_read_pitch() {
 
 // Update Roll Pulse Width
 void RadioInput::_read_roll() {
-  if (_chan_mask & CH_ROLL) {
+  if (_chan_mask & (1 << CH_ROLL)) {
     if (digitalRead(PIN_ROLL) == HIGH) {
       _roll_start = micros();
     }
@@ -109,3 +111,20 @@ void RadioInput::_read_aux4(){
     }
   }
 }
+
+void roll_int() {
+  _radio_ref->_read_roll();
+}
+
+void pitch_int() {
+  _radio_ref->_read_pitch();
+}
+
+void thr_int() {
+  _radio_ref->_read_throttle();
+}
+
+void yaw_int() {
+  _radio_ref->_read_yaw();
+}
+

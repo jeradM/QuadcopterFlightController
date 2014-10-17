@@ -175,32 +175,10 @@ void FC_IMU::set_baseline() {
       acc_tot[j]  += (int32_t)tmp_acc[j];
       gyro_tot[j] += (int32_t)tmp_gyro[j];
     }
-    // Serial.print("Acc: ");
-    // Serial.print(tmp_acc[0]);
-    // Serial.print(" ");
-    // Serial.print(tmp_acc[1]);
-    // Serial.print(" ");
-    // Serial.print(tmp_acc[2]);
-    // Serial.print(" Gyro: ");
-    // Serial.print(tmp_gyro[0]);
-    // Serial.print(" ");
-    // Serial.print(tmp_gyro[1]);
-    // Serial.print(" ");
-    // Serial.println(tmp_gyro[2]);
+    
     delay(100);
   }
-  // Serial.print("Acc: ");
-  // Serial.print(acc_tot[0]);
-  // Serial.print(" ");
-  // Serial.print(acc_tot[1]);
-  // Serial.print(" ");
-  // Serial.print(acc_tot[2]);
-  // Serial.print(" Gyro: ");
-  // Serial.print(gyro_tot[0]);
-  // Serial.print(" ");
-  // Serial.print(gyro_tot[1]);
-  // Serial.print(" ");
-  // Serial.println(gyro_tot[2]);
+  
   for (int i = 0; i < 3; i++) {
     _accel_baseline[i] = (int16_t)(acc_tot[i] / 20);
     _gyro_baseline[i]  = (int16_t)(gyro_tot[i] / 20);
