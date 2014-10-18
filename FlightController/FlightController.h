@@ -28,22 +28,22 @@
   #define PID_RATE_YAW_IL   1.0
   
 #define PID_STAB_ROL        3
-  #define PID_STAB_ROL_P    .5
-  #define PID_STAB_ROL_I    .5
-  #define PID_STAB_ROL_D    .5
-  #define PID_STAB_ROL_IL   .5
+  #define PID_STAB_ROL_P    4.5
+  #define PID_STAB_ROL_I    0.0
+  #define PID_STAB_ROL_D    0.0
+  #define PID_STAB_ROL_IL   0.0
   
 #define PID_STAB_PIT        4
-  #define PID_STAB_PIT_P    .5
-  #define PID_STAB_PIT_I    .5
-  #define PID_STAB_PIT_D    .5
-  #define PID_STAB_PIT_IL   .5
+  #define PID_STAB_PIT_P    4.5
+  #define PID_STAB_PIT_I    0.0
+  #define PID_STAB_PIT_D    0.0
+  #define PID_STAB_PIT_IL   0.0
   
 #define PID_STAB_YAW        5
-  #define PID_STAB_YAW_P    .5
-  #define PID_STAB_YAW_I    .5
-  #define PID_STAB_YAW_D    .5
-  #define PID_STAB_YAW_IL   .5
+  #define PID_STAB_YAW_P    4.5
+  #define PID_STAB_YAW_I    0.0
+  #define PID_STAB_YAW_D    0.0
+  #define PID_STAB_YAW_IL   0.0
 
 class FlightController {
 public:

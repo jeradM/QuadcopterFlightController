@@ -38,22 +38,56 @@ void FlightController::update() {
   _parse_aux();
   
   long in_thr = _radio_prev[CH_THR];
-  long in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
-  long in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
-  long in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
-  
-  if (sensor_update_int) {
-    _imu.update_sensors();
-    sensor_update_int = false;
+  long in_pit, in_rol, in_yaw;
+
+  if (_auto_level) {
+    in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
+    in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
+    in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
   }
+  else {
+    in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -90, 90);
+    in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -90, 90);
+    in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
+  }
+  
+  while (!sensor_update_int);
+  _imu.update_sensors();
+  sensor_update_int = false;
 
   float *gyro_rate = _imu.get_gyro();
   
   if (in_thr > _radio._channels_min[CH_THR] + 100 && _motors.is_armed()) {
-    float pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
-    float rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
-    float yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
-    
+    float pit_err, rol_err, yaw_err;
+    if (_auto_level) {
+      float eulers[3];
+      _imu._quaternion.to_euler(eulers);
+      float pit_stab_err = _pids[PID_STAB_PIT].get_pid((float)in_pit - degrees(eulers[1]));
+      float rol_stab_err = _pids[PID_STAB_ROL].get_pid((float)in_rol - degrees(eulers[0]));
+      float yaw_stab_err = _pids[PID_STAB_YAW].get_pid((float)in_yaw - degrees(eulers[2]));
+      
+      // Serial.print(degrees(eulers[1]));
+      // Serial.print(" | ");
+      // Serial.print(degrees(eulers[0]));
+      // Serial.print(" | ");
+      // Serial.print(degrees(eulers[2]));
+      // Serial.print(" | ");
+      // Serial.print(in_pit);
+      // Serial.print(" | ");
+      // Serial.print(in_rol);
+      // Serial.print(" | ");
+      // Serial.print(in_yaw);
+      // Serial.print(" | ");
+      
+      pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - pit_stab_err);
+      rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - rol_stab_err);
+      yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - yaw_stab_err);
+    }
+    else {
+      pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
+      rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
+      yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
+    }    
     // Serial.print(pit_err);
     // Serial.print(" | ");
     // Serial.print(rol_err);
@@ -61,18 +95,18 @@ void FlightController::update() {
     // Serial.print(yaw_err);
     // Serial.print(" | ");
     
-    // _motors.write_pwm(MOTOR_FL, in_thr + (int16_t)(pit_err - rol_err + yaw_err));
-    // _motors.write_pwm(MOTOR_FR, in_thr + (int16_t)(pit_err + rol_err - yaw_err));
-    // _motors.write_pwm(MOTOR_RL, in_thr - (int16_t)(pit_err + rol_err + yaw_err));
-    // _motors.write_pwm(MOTOR_RR, in_thr - (int16_t)(pit_err - rol_err - yaw_err));
-    Serial.print(in_thr + (int16_t)(pit_err - rol_err + yaw_err));
-    Serial.print(" | ");
-    Serial.print(in_thr + (int16_t)(pit_err + rol_err - yaw_err));
-    Serial.print(" | ");
-    Serial.print(in_thr - (int16_t)(pit_err + rol_err + yaw_err));
-    Serial.print(" | ");
-    Serial.print(in_thr - (int16_t)(pit_err - rol_err - yaw_err));
-    Serial.println();
+    _motors.write_pwm(MOTOR_FL, in_thr + (int16_t)(pit_err - rol_err + yaw_err));
+    _motors.write_pwm(MOTOR_FR, in_thr + (int16_t)(pit_err + rol_err - yaw_err));
+    _motors.write_pwm(MOTOR_RL, in_thr - (int16_t)(pit_err + rol_err + yaw_err));
+    _motors.write_pwm(MOTOR_RR, in_thr - (int16_t)(pit_err - rol_err - yaw_err));
+    // Serial.print(in_thr + (int16_t)(pit_err - rol_err + yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr + (int16_t)(pit_err + rol_err - yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr - (int16_t)(pit_err + rol_err + yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr - (int16_t)(pit_err - rol_err - yaw_err));
+    // Serial.println();
   }
   else {
     _motors.write_pwm(MOTOR_FL, 1000);
@@ -95,7 +129,8 @@ void FlightController::update() {
 }
 
 void FlightController::_parse_aux() {
-  _auto_level = _radio_prev[CH_AUX1] > 1500 ? true : false;
+  //_auto_level = _radio_prev[CH_AUX1] > 1500 ? true : false;
+  _auto_level = true;
 }
 
 void FlightController::_setup_pids() {
