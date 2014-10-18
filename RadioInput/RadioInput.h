@@ -30,7 +30,7 @@ public:
   uint8_t _chan_mask;
   volatile uint16_t _channels_val[8];
   
-  RadioInput(int num_channels) {
+  RadioInput(int num_channels = 4) {
     _chan_mask = (1 << num_channels) - 1;
   }
   
@@ -64,7 +64,7 @@ public:
   
   // Set min/max pulse width for a channel
   // These should be the pulses your transmitter outputs
-  void calibrate_channel(int chan, uint16_t min, uint16_t max) {
+  void _calibrate_channel(int chan, uint16_t min, uint16_t max) {
     _channels_min[chan] = min;
     _channels_max[chan] = max;
   }

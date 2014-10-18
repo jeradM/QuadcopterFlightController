@@ -42,6 +42,10 @@
    uint16_t max_pulse() const {
      return _max_pulse;
    }
+   
+   bool is_armed() {
+     return _armed;
+   }
    // ----------------------------------------
    
  private:

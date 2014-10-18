@@ -4,6 +4,10 @@
 extern RadioInput* _radio_ref;
 
 void RadioInput::init() {
+  _calibrate_channel(CH_ROLL, 1070, 1960);
+  _calibrate_channel(CH_PITCH, 1150, 1940);
+  _calibrate_channel(CH_THR, 1100, 1840);
+  _calibrate_channel(CH_YAW, 1010, 2000);
   PCintPort::attachInterrupt(PIN_PITCH, pitch_int, CHANGE);
   PCintPort::attachInterrupt(PIN_ROLL, roll_int, CHANGE);
   PCintPort::attachInterrupt(PIN_THR, thr_int, CHANGE);

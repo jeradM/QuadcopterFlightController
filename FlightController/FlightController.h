@@ -10,22 +10,22 @@
 #define LED_GREEN           13
 
 #define PID_RATE_ROL        0
-  #define PID_RATE_ROL_P   .5
-  #define PID_RATE_ROL_I   .5
-  #define PID_RATE_ROL_D   .5
-  #define PID_RATE_ROL_IL  .5
+  #define PID_RATE_ROL_P   .8
+  #define PID_RATE_ROL_I   0.1
+  #define PID_RATE_ROL_D   0.0
+  #define PID_RATE_ROL_IL  1.0
   
 #define PID_RATE_PIT        1
-  #define PID_RATE_PIT_P    .5
-  #define PID_RATE_PIT_I    .5
-  #define PID_RATE_PIT_D    .5
-  #define PID_RATE_PIT_IL   .5
+  #define PID_RATE_PIT_P    .8
+  #define PID_RATE_PIT_I    0.1
+  #define PID_RATE_PIT_D    0.0
+  #define PID_RATE_PIT_IL   1.0
   
 #define PID_RATE_YAW        2
   #define PID_RATE_YAW_P    .5
-  #define PID_RATE_YAW_I    .5
-  #define PID_RATE_YAW_D    .5
-  #define PID_RATE_YAW_IL   .5
+  #define PID_RATE_YAW_I    0.1
+  #define PID_RATE_YAW_D    0.0
+  #define PID_RATE_YAW_IL   1.0
   
 #define PID_STAB_ROL        3
   #define PID_STAB_ROL_P    .5
@@ -48,7 +48,7 @@
 class FlightController {
 public:
   MotorOutput _motors;
-  RadioInput  _radio(8);
+  RadioInput  _radio;
   
   FlightController() {}
   
@@ -80,6 +80,5 @@ private:
   
 };
 
-RadioInput *_radio_ref = &_radio;
 
 #endif

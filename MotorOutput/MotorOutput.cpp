@@ -19,8 +19,8 @@ void MotorOutput::init() {
   TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);
   TCCR1B = (1 << WGM12)  | (1 << WGM13)  | (1 << CS12);
   ICR1   = 255;
-  OCR1A  = 0xFF; 
-  OCR1B  = 0xFF;
+  OCR1A  = 0x00; 
+  OCR1B  = 0x00;
   
   // Setup Timer2
   // - Clear OCR on match
@@ -29,13 +29,14 @@ void MotorOutput::init() {
   // - 16us tick -- PWM: 62.5 = 1000us - 125 = 2000us
   TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM20) | (1 << WGM21);
   TCCR2B = (1 << CS21) | (1 << CS22);
-  OCR2A  = 0xFF;
-  OCR2B  = 0xFF;
+  OCR2A  = 0x00;
+  OCR2B  = 0x00;
   
 }
 
 // Initialize ESCs at startup
 void MotorOutput::init_esc() {
+  _armed = true;
   if (!_esc_init) {
     for (int i = 0; i < _num_motors; i++) {
       write_pwm(i, 1000);
@@ -43,6 +44,7 @@ void MotorOutput::init_esc() {
     delay(5000);
     _esc_init = true;
   }
+  _armed = false;
 }
 
 // Set PWM pulse width for an output channel
@@ -79,7 +81,7 @@ void MotorOutput::disarm() {
 
 // Change from 1us units to 16us units and check bounds
 uint8_t MotorOutput::_constrain_pwm(uint16_t pwm) {
-  uint8_t pwm_shift = (pwm >> 4); // 1us RC signal to 16us timer
+  uint8_t pwm_shift = (uint8_t)(pwm >> 4); // 1us RC signal to 16us timer
   if (pwm_shift < _min_pulse) return _min_pulse;
   if (pwm_shift > _max_pulse) return _max_pulse;
   return pwm_shift;
