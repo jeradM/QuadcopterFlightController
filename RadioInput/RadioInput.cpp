@@ -4,15 +4,16 @@
 extern RadioInput* _radio_ref;
 
 void RadioInput::init() {
-  _calibrate_channel(CH_ROLL, 1070, 1960);
-  _calibrate_channel(CH_PITCH, 1150, 1940);
+  _calibrate_channel(CH_ROLL, 1030, 2000);
+  _calibrate_channel(CH_PITCH, 1140, 1940);
   _calibrate_channel(CH_THR, 1100, 1840);
   _calibrate_channel(CH_YAW, 1010, 2000);
+  _calibrate_channel(CH_AUX1, 1000, 2000);
   PCintPort::attachInterrupt(PIN_PITCH, pitch_int, CHANGE);
   PCintPort::attachInterrupt(PIN_ROLL, roll_int, CHANGE);
   PCintPort::attachInterrupt(PIN_THR, thr_int, CHANGE);
   PCintPort::attachInterrupt(PIN_YAW, yaw_int, CHANGE);
-  // PCintPort::attachInterrupt(PIN_AUX1, _read_aux1, CHANGE);
+  PCintPort::attachInterrupt(PIN_AUX1, aux1_int, CHANGE);
   // PCintPort::attachInterrupt(PIN_AUX2, _read_aux2, CHANGE);
   // PCintPort::attachInterrupt(PIN_AUX3, _read_aux3, CHANGE);
   // PCintPort::attachInterrupt(PIN_AUX4, _read_aux4, CHANGE);
@@ -73,7 +74,7 @@ void RadioInput::_read_roll() {
 }
 
 void RadioInput::_read_aux1(){
-  if (_chan_mask & CH_AUX1) {
+  if (_chan_mask & (1 << CH_AUX1)) {
     if (digitalRead(PIN_AUX1) == HIGH) {
       _aux1_start = micros();
     }
@@ -130,5 +131,9 @@ void thr_int() {
 
 void yaw_int() {
   _radio_ref->_read_yaw();
+}
+
+void aux1_int() {
+  _radio_ref->_read_aux1();
 }
 

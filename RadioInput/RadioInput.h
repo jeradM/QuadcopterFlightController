@@ -30,7 +30,7 @@ public:
   uint8_t _chan_mask;
   volatile uint16_t _channels_val[8];
   
-  RadioInput(int num_channels = 4) {
+  RadioInput(int num_channels = 5) {
     _chan_mask = (1 << num_channels) - 1;
   }
   
@@ -90,5 +90,6 @@ void roll_int();
 void pitch_int();
 void thr_int();
 void yaw_int();
+void aux1_int();
 
 #endif

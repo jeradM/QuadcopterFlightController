@@ -34,30 +34,32 @@ void FlightController::calibrate_radio() {
 }
 
 void FlightController::update() {
+  //while (!sensor_update_int);
+  //_imu.update_sensors();
+  sensor_update_int = false;
+  
   _radio.update(_radio_prev);
   _parse_aux();
   
-  long in_thr = _radio_prev[CH_THR];
+  long in_thr = map(_radio_prev[CH_THR], _radio._channels_min[CH_THR], _radio._channels_max[CH_THR], 1000, 1850);
   long in_pit, in_rol, in_yaw;
 
   if (_auto_level) {
+    _led_green(true);
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
     in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
   }
   else {
+    _led_green(false);
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -90, 90);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -90, 90);
     in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
   }
-  
-  while (!sensor_update_int);
-  _imu.update_sensors();
-  sensor_update_int = false;
 
   float *gyro_rate = _imu.get_gyro();
   
-  if (in_thr > _radio._channels_min[CH_THR] + 100 && _motors.is_armed()) {
+  if (in_thr > 1100 && _motors.is_armed()) {
     float pit_err, rol_err, yaw_err;
     if (_auto_level) {
       float eulers[3];
@@ -95,10 +97,10 @@ void FlightController::update() {
     // Serial.print(yaw_err);
     // Serial.print(" | ");
     
-    _motors.write_pwm(MOTOR_FL, in_thr + (int16_t)(pit_err - rol_err + yaw_err));
-    _motors.write_pwm(MOTOR_FR, in_thr + (int16_t)(pit_err + rol_err - yaw_err));
-    _motors.write_pwm(MOTOR_RL, in_thr - (int16_t)(pit_err + rol_err + yaw_err));
-    _motors.write_pwm(MOTOR_RR, in_thr - (int16_t)(pit_err - rol_err - yaw_err));
+    _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err + yaw_err), 1040, 2000));
+    _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err - yaw_err), 1040, 2000));
+    _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err + yaw_err), 1040, 2000));
+    _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err - yaw_err), 1040, 2000));
     // Serial.print(in_thr + (int16_t)(pit_err - rol_err + yaw_err));
     // Serial.print(" | ");
     // Serial.print(in_thr + (int16_t)(pit_err + rol_err - yaw_err));
@@ -130,7 +132,13 @@ void FlightController::update() {
 
 void FlightController::_parse_aux() {
   //_auto_level = _radio_prev[CH_AUX1] > 1500 ? true : false;
-  _auto_level = true;
+  if (_radio_prev[CH_AUX1] > 1500) {
+    _auto_level = true;
+  }
+  else {
+    _auto_level = false;
+  }
+  //_auto_level = true;
 }
 
 void FlightController::_setup_pids() {
@@ -144,10 +152,10 @@ void FlightController::_setup_pids() {
 
 void FlightController::_led_blue(bool on) {
   if (on) {
-    PORTB |= (1 << 4);
+    PORTB |= (1 << LED_BLUE);
   }
   else {
-    PORTB &=~ (1 << 4);
+    PORTB &=~ (1 << LED_BLUE);
   }
 }
 void FlightController::_led_green(bool on) {
