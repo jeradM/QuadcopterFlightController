@@ -6,8 +6,8 @@
 #include <PID.h>
 #include <FC_IMU.h>
 
-#define LED_BLUE            12
-#define LED_GREEN           13
+#define LED_BLUE            4
+#define LED_GREEN           5
 
 #define PID_RATE_ROL        0
   #define PID_RATE_ROL_P   .8
@@ -74,6 +74,7 @@ private:
   
   // Auxillary Input Functions
   void _parse_aux();
+  void _esc_calibration();
   void _setup_pids();
   void _led_blue(bool on);
   void _led_green(bool on);
