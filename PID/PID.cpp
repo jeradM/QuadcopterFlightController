@@ -10,7 +10,7 @@ float PID::get_pid(float error) {
    
    if (_t_prev == 0 || dt > 1000) {
      dt = 0;
-     _kI = 0;
+     _i_sum = 0;
    }
    
    _t_prev = cur_time;
@@ -30,7 +30,7 @@ float PID::get_pid(float error) {
    if (_kD != 0 && dt > 0) {
      float dx;
      
-     if (isNAN(_d_prev)) {
+     if (isnan(_d_prev)) {
        dx      = 0.0f;
        _d_prev = 0.0f;
      }

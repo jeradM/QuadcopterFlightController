@@ -156,6 +156,7 @@ void FC_IMU::update_quaternion() {
     _time_prev = time;
     _dt /= 1000.0f;
     _quaternion.update_mahoney(_gyro_rate, _accel_angle, _dt); 
+		//_quaternion.update(_gyro_rate, _accel_angle, _dt);
   }
 }
 

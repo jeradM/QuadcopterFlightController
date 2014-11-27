@@ -42,8 +42,8 @@ void FlightController::calibrate_radio() {
 }
 
 void FlightController::update() {
-  //while (!sensor_update_int);
-  //_imu.update_sensors();
+  while (!sensor_update_int);
+  _imu.update_sensors();
   sensor_update_int = false;
   
   _radio.update(_radio_prev);
@@ -54,25 +54,22 @@ void FlightController::update() {
 
   if (_auto_level) {
     _led_green(true);
-		// Map radio channels to desired attitude angles
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
-    in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
+    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -100, 90);
   }
   else {
     _led_green(false);
-		// Map radio channels to desired rotational velocities
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -90, 90);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -90, 90);
-    in_yaw = -map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -150, 150);
+    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -120, 90);
   }
 
-	// Read current 3-axis rotational rates from gyroscope
   float *gyro_rate = _imu.get_gyro();
   
   if (in_thr > 1100 && _motors.is_armed()) {
     float pit_err, rol_err, yaw_err;
-    if (_auto_level) { // Auto-Level enabled - Perform Stability PID Calculations
+    if (_auto_level) {
       float eulers[3];
       _imu._quaternion.to_euler(eulers);
       float pit_stab_err = _pids[PID_STAB_PIT].get_pid((float)in_pit - degrees(eulers[1]));
@@ -83,33 +80,28 @@ void FlightController::update() {
       rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - rol_stab_err);
       yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - yaw_stab_err);
     }
-    else { // Rate mode enabled - perform rate PID calculations
+    else {
       pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
       rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
       yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
-    }    
     
-		// Set PWM of each motor based on PID controller outputs
-    _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err + yaw_err), 1040, 2000));
-    _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err - yaw_err), 1040, 2000));
-    _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err + yaw_err), 1040, 2000));
-    _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err - yaw_err), 1040, 2000));
-		
+    _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err - yaw_err + 60), 1040, 2000));
+    _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err + yaw_err), 1040, 2000));
+    _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err - yaw_err), 1040, 2000));
+    _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err + yaw_err - 60), 1040, 2000));
+
   }
   else {
-		// Throttle in MIN position - turn off all motors
     _motors.write_pwm(MOTOR_FL, 1000);
     _motors.write_pwm(MOTOR_FR, 1000);
     _motors.write_pwm(MOTOR_RL, 1000);
     _motors.write_pwm(MOTOR_RR, 1000);
     if (in_thr < _radio._channels_min[CH_THR] + 30) {
       if (_radio_prev[CH_YAW] > _radio._channels_max[CH_YAW] - 50 && _motors.is_armed()) {
-				// Arm motors
         _motors.disarm();
         _led_blue(false);
       }
       else if (_radio_prev[CH_YAW] < _radio._channels_min[CH_YAW] + 50 && !_motors.is_armed()) {
-				// Disarm motors
         _motors.arm();
         _led_blue(true);
       }
@@ -119,7 +111,6 @@ void FlightController::update() {
   
 }
 
-// Check for auto level mode based on yaw stick
 void FlightController::_parse_aux() {
   //_auto_level = _radio_prev[CH_AUX1] > 1500 ? true : false;
   if (_radio_prev[CH_AUX1] > 1500) {
@@ -128,9 +119,9 @@ void FlightController::_parse_aux() {
   else {
     _auto_level = false;
   }
+  //_auto_level = true;
 }
 
-// Start ESC calibration
 void FlightController::_esc_calibration() {
   _motors.arm();
   for (int i = 0; i < 4; i++) {
@@ -149,7 +140,6 @@ void FlightController::_esc_calibration() {
   while(true);
 }
 
-// Initalize PIDs with starting values
 void FlightController::_setup_pids() {
   _pids[PID_RATE_ROL](PID_RATE_ROL_P, PID_RATE_ROL_I, PID_RATE_ROL_D, PID_RATE_ROL_IL);
   _pids[PID_RATE_PIT](PID_RATE_PIT_P, PID_RATE_PIT_I, PID_RATE_PIT_D, PID_RATE_PIT_IL);
@@ -159,7 +149,6 @@ void FlightController::_setup_pids() {
   _pids[PID_STAB_YAW](PID_STAB_YAW_P, PID_STAB_YAW_I, PID_STAB_YAW_D, PID_STAB_YAW_IL);
 }
 
-// Blue LED - Motors Armed Indicator
 void FlightController::_led_blue(bool on) {
   if (on) {
     PORTB |= (1 << LED_BLUE);
@@ -168,8 +157,6 @@ void FlightController::_led_blue(bool on) {
     PORTB &=~ (1 << LED_BLUE);
   }
 }
-
-// Green LED - Auto-Level mode indication
 void FlightController::_led_green(bool on) {
   if (on) {
     PORTB |= (1 << LED_GREEN);

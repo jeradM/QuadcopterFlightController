@@ -51,7 +51,7 @@ void FC_Quaternion::update(float *dw, float *a, float dt) {
 
   // Quaternion derivative of angular velocity
   FC_Quaternion rate_der = times(qW).times_scalar(0.5f);
-  float beta = (-1.0f) * (sqrt(3.0f / 4.0f) * radians(.001f));
+  float beta = (-1.0f) * (sqrt(3.0f / 4.0f) * radians(.01f));
 
   // Calculated Quaternion Derivative (gyro/accel)
   FC_Quaternion deriv = rate_der.plus(q_grad.times_scalar(beta)).times_scalar(dt);
@@ -96,7 +96,6 @@ void FC_Quaternion::update_mahoney(float *dw, float *a, float dt) {
   normalize();
   
 }
-
 
 // Quaternion Multiplication
 // Q1 = (s, V) * Q2 = (t, U)
