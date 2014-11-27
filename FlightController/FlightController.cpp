@@ -56,13 +56,13 @@ void FlightController::update() {
     _led_green(true);
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -45, 45);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -45, 45);
-    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -100, 90);
+    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -90, 90);
   }
   else {
     _led_green(false);
     in_pit = -map(_radio_prev[CH_PITCH], _radio._channels_min[CH_PITCH], _radio._channels_max[CH_PITCH], -90, 90);
     in_rol = map(_radio_prev[CH_ROLL], _radio._channels_min[CH_ROLL], _radio._channels_max[CH_ROLL], -90, 90);
-    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -120, 90);
+    in_yaw = map(_radio_prev[CH_YAW], _radio._channels_min[CH_YAW], _radio._channels_max[CH_YAW], -90, 90);
   }
 
   float *gyro_rate = _imu.get_gyro();
@@ -76,6 +76,19 @@ void FlightController::update() {
       float rol_stab_err = _pids[PID_STAB_ROL].get_pid((float)in_rol - degrees(eulers[0]));
       float yaw_stab_err = _pids[PID_STAB_YAW].get_pid((float)in_yaw - degrees(eulers[2]));
       
+      // Serial.print(degrees(eulers[1]));
+      // Serial.print(" | ");
+      // Serial.print(degrees(eulers[0]));
+      // Serial.print(" | ");
+      // Serial.print(degrees(eulers[2]));
+      // Serial.print(" | ");
+      // Serial.print(in_pit);
+      // Serial.print(" | ");
+      // Serial.print(in_rol);
+      // Serial.print(" | ");
+      // Serial.print(in_yaw);
+      // Serial.print(" | ");
+      
       pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - pit_stab_err);
       rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - rol_stab_err);
       yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - yaw_stab_err);
@@ -84,12 +97,26 @@ void FlightController::update() {
       pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
       rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
       yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
+    }    
+    // Serial.print(pit_err);
+    // Serial.print(" | ");
+    // Serial.print(rol_err);
+    // Serial.print(" | ");
+    // Serial.print(yaw_err);
+    // Serial.print(" | ");
     
-    _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err - yaw_err + 60), 1040, 2000));
-    _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err + yaw_err), 1040, 2000));
-    _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err - yaw_err), 1040, 2000));
-    _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err + yaw_err - 60), 1040, 2000));
-
+    _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err - yaw_err), 1100, 2000));
+    _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err + yaw_err), 1100, 2000));
+    _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err - yaw_err), 1100, 2000));
+    _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err + yaw_err), 1100, 2000));
+    // Serial.print(in_thr + (int16_t)(pit_err - rol_err + yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr + (int16_t)(pit_err + rol_err - yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr - (int16_t)(pit_err + rol_err + yaw_err));
+    // Serial.print(" | ");
+    // Serial.print(in_thr - (int16_t)(pit_err - rol_err - yaw_err));
+    // Serial.println();
   }
   else {
     _motors.write_pwm(MOTOR_FL, 1000);

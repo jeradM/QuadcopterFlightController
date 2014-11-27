@@ -28,25 +28,26 @@
   #define PID_RATE_YAW_IL   1.0
   
 #define PID_STAB_ROL        3
-  #define PID_STAB_ROL_P    1.5
-  #define PID_STAB_ROL_I    0.0
+  #define PID_STAB_ROL_P    2.0
+  #define PID_STAB_ROL_I    0.2
   #define PID_STAB_ROL_D    0.0
-  #define PID_STAB_ROL_IL   0.0
+  #define PID_STAB_ROL_IL   1.0
   
 #define PID_STAB_PIT        4
-  #define PID_STAB_PIT_P    1.5
-  #define PID_STAB_PIT_I    0.0
+  #define PID_STAB_PIT_P    2.0
+  #define PID_STAB_PIT_I    0.2
   #define PID_STAB_PIT_D    0.0
-  #define PID_STAB_PIT_IL   0.0
+  #define PID_STAB_PIT_IL   1.0
   
 #define PID_STAB_YAW        5
-  #define PID_STAB_YAW_P    4.5
-  #define PID_STAB_YAW_I    0.0
+  #define PID_STAB_YAW_P    2.0
+  #define PID_STAB_YAW_I    0.2
   #define PID_STAB_YAW_D    0.0
-  #define PID_STAB_YAW_IL   0.0
+  #define PID_STAB_YAW_IL   1.0
 
 class FlightController {
 public:
+  FC_IMU _imu;
   MotorOutput _motors;
   RadioInput  _radio;
   
@@ -62,7 +63,6 @@ public:
   
 private:
   PID _pids[6];
-  FC_IMU _imu;
   
   int16_t _accel[3];
   int16_t _gyro[3];

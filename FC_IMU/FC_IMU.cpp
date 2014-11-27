@@ -139,6 +139,18 @@ bool FC_IMU::update_sensors() {
   _gyro_data[0]   =  ((((int16_t)data[8])  << 8) | data[9])  - _gyro_baseline[0];
   _gyro_data[1]   =  ((((int16_t)data[10]) << 8) | data[11]) - _gyro_baseline[1];
   _gyro_data[2]   =  ((((int16_t)data[12]) << 8) | data[13]) - _gyro_baseline[2]; 
+	
+	if (abs(_gyro_data[0]) < 30 ) {
+		_gyro_data[0] = (int16_t)0;
+	}
+	
+	if (abs(_gyro_data[1]) < 30 ) {
+		_gyro_data[1] = (int16_t)0;
+	}
+	
+	if (abs(_gyro_data[2]) < 100 ) {
+		_gyro_data[2] = (int16_t)0;
+	}
   
   gyro_rate();
   accel_angle();
