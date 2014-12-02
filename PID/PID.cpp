@@ -12,22 +12,42 @@ float PID::get_pid(float error) {
      dt = 0;
      _i_sum = 0;
    }
+	 
+	 if (debug) {
+		 Serial.print("Error: ");
+		 Serial.print(error);
+		 Serial.print(" | dt: ");
+		 Serial.print(dt);
+	 }
    
    _t_prev = cur_time;
    time_dif = (float)dt/1000.0f;
    
-   result = error * _kP;
+   result += error * _kP;
+	 
+	 if (debug) {
+		 Serial.print(" | ");
+		 Serial.print("P Error: ");
+		 Serial.print(result);
+	 }
    
-   if (_kI != 0 && dt > 0) {
+   if (abs(_kI) > 0 && dt > 0) {
      _i_sum += error * _kI * time_dif;
      
      if (_i_sum < -_i_limit) _i_sum     = -_i_limit;
      else if (_i_sum > _i_limit) _i_sum = _i_limit;  
      
-     result += _i_sum;
+     result += _i_sum;	 
+		 
+		 if (debug) {
+			 Serial.print(" | ");
+			 Serial.print("I Error: ");
+			 Serial.print(result);
+		 }
+		 
    }
    
-   if (_kD != 0 && dt > 0) {
+   if (abs(_kD) > 0 && dt > 0) {
      float dx;
      
      if (isnan(_d_prev)) {
@@ -39,7 +59,19 @@ float PID::get_pid(float error) {
      }
      
      result += dx * _kD;
+		 
+		 if (debug) {
+			 Serial.print(" | ");
+			 Serial.print("D Error: ");
+			 Serial.print(result);
+		 }
+		 
    }
-   
+	 
+	 if (debug) {
+	   Serial.print(" | Error: ");
+		 Serial.println(result);
+	 }
+	 
    return result;
 }

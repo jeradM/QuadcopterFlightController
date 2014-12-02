@@ -5,6 +5,8 @@
 
 class PID {
 public:
+	bool debug;
+	
   PID(float init_p = 0.0, float init_i = 0.0, float init_d = 0.0, uint16_t init_i_limit = 0) {
     _kP            = init_p;
     _kI            = init_i;
@@ -59,7 +61,7 @@ private:
   float     _kP;
   float     _kI;
   float     _kD;
-  uint16_t  _i_limit;
+  int16_t  _i_limit;
   float     _i_sum;
   float     _err_prev;
   float     _d_prev;

@@ -21,6 +21,13 @@ public:
     y = ny;
     z = nz;
   }
+	
+	void reset() {
+		w = 1.0;
+		x = 0.0;
+		y = 0.0;
+		z = 0.0;
+	}
   
   void update(float *dw, float *a, float dt);
   void update_mahoney(float *dw, float *a, float dt);

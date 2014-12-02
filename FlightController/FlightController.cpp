@@ -1,6 +1,11 @@
 #include "FlightController.h"
 #include "FC_IMU.h"
 
+//#define printpiderr
+//#define printreadings
+//#define printall
+//#define printpid
+
 extern volatile bool sensor_update_int;
 RadioInput *_radio_ref;
 
@@ -68,61 +73,150 @@ void FlightController::update() {
   float *gyro_rate = _imu.get_gyro();
   
   if (in_thr > 1100 && _motors.is_armed()) {
-    float pit_err, rol_err, yaw_err;
+    double pit_err, rol_err, yaw_err;
     if (_auto_level) {
-      float eulers[3];
       _imu._quaternion.to_euler(eulers);
-      float pit_stab_err = _pids[PID_STAB_PIT].get_pid((float)in_pit - degrees(eulers[1]));
-      float rol_stab_err = _pids[PID_STAB_ROL].get_pid((float)in_rol - degrees(eulers[0]));
-      float yaw_stab_err = _pids[PID_STAB_YAW].get_pid((float)in_yaw - degrees(eulers[2]));
+      pit_stab_err = constrain(_pids[PID_STAB_PIT].get_pid((float)in_pit - degrees(eulers[1])), -250, 250);
+      rol_stab_err = constrain(_pids[PID_STAB_ROL].get_pid((float)in_rol - degrees(eulers[0])), -250, 250);
+      yaw_stab_err = constrain(_pids[PID_STAB_YAW].get_pid(wrap_180((float)yaw_target - degrees(eulers[2]))), -360, 360);
+	
+//****************************************************************//			
+#if defined (printreadings)
+			if (cnt == 20) {
+				Serial.print(in_pit);
+				Serial.print(":");
+				Serial.print(degrees(eulers[1]));
+				Serial.print(" | ");
+				Serial.print(in_rol);
+				Serial.print(":");
+				Serial.print(degrees(eulers[0]));
+				Serial.print(" | ");
+				Serial.print(in_yaw);
+				Serial.print(":");
+				Serial.print(degrees(eulers[2]));
+				Serial.println();
+				cnt = 0;
+			}
+			else {
+				cnt++;
+			}
+			
+#endif
+//****************************************************************//	
+			
+			if (abs(in_yaw) > 10) {
+				yaw_stab_err = in_yaw;
+				yaw_target = degrees(eulers[2]);
+			}
       
-      // Serial.print(degrees(eulers[1]));
-      // Serial.print(" | ");
-      // Serial.print(degrees(eulers[0]));
-      // Serial.print(" | ");
-      // Serial.print(degrees(eulers[2]));
-      // Serial.print(" | ");
-      // Serial.print(in_pit);
-      // Serial.print(" | ");
-      // Serial.print(in_rol);
-      // Serial.print(" | ");
-      // Serial.print(in_yaw);
-      // Serial.print(" | ");
-      
-      pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - pit_stab_err);
-      rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - rol_stab_err);
-      yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - yaw_stab_err);
+      pit_err = constrain(_pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - pit_stab_err), -500, 500);
+      rol_err = constrain(_pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - rol_stab_err), -500, 500);
+      yaw_err = constrain(_pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - yaw_stab_err), -500, 500);
+	
+//****************************************************************//		
+#if defined (printall)
+		if (cnt == 20) {
+			Serial.print(pit_stab_err);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[1]));
+			Serial.print(":");
+			Serial.print(pit_err);
+			Serial.print(" | ");
+			Serial.print(rol_stab_err);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[0]));
+			Serial.print(":");
+			Serial.print(rol_err);
+			Serial.print(" | ");
+			Serial.print(yaw_stab_err);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[2]));
+			Serial.print(":");
+			Serial.print(yaw_err);
+			Serial.println();
+			cnt = 0;
+		}
+		else {
+			cnt++;
+		}
+#endif
+#if defined (printpid)
+		if (cnt == 20) {
+			_pids[PID_RATE_YAW].debug = true;
+			cnt = 0;
+		}
+		else {
+			_pids[PID_RATE_YAW].debug = false;
+			cnt++;
+		}
+#endif
+//****************************************************************//	
     }
     else {
-      pit_err = _pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit);
-      rol_err = _pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol);
-      yaw_err = _pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw);
-    }    
-    // Serial.print(pit_err);
-    // Serial.print(" | ");
-    // Serial.print(rol_err);
-    // Serial.print(" | ");
-    // Serial.print(yaw_err);
-    // Serial.print(" | ");
-    
+      pit_err = constrain(_pids[PID_RATE_PIT].get_pid(degrees(gyro_rate[1]) - (float)in_pit), -500, 500);
+      rol_err = constrain(_pids[PID_RATE_ROL].get_pid(degrees(gyro_rate[0]) - (float)in_rol), -500, 500);
+      yaw_err = constrain(_pids[PID_RATE_YAW].get_pid(degrees(gyro_rate[2]) - (float)in_yaw), -500, 500);
+		
+//****************************************************************//		
+#if defined (printall)
+		if (cnt == 20) {
+			Serial.print(in_pit);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[1]));
+			Serial.print(":");
+			Serial.print(pit_err);
+			Serial.print(" | ");
+			Serial.print(in_rol);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[0]));
+			Serial.print(":");
+			Serial.print(rol_err);
+			Serial.print(" | ");
+			Serial.print(in_yaw);
+			Serial.print(":");
+			Serial.print(degrees(gyro_rate[2]));
+			Serial.print(":");
+			Serial.print(yaw_err);
+			Serial.println();
+			cnt = 0;
+		}
+		else {
+			cnt++;
+		}
+#endif
+//****************************************************************//	
+		
+    }  
+		
+//****************************************************************//	
+#if defined (printpiderr)
+		if (cnt == 20) {
+			Serial.print(pit_err, 4);
+			Serial.print(" | ");
+			Serial.print(rol_err, 4);
+			Serial.print(" | ");
+			Serial.print(yaw_err, 4);
+			Serial.println();	  
+			cnt = 0;
+		}
+		else {
+			cnt++;
+		}
+#endif
+//****************************************************************//	
+		
     _motors.write_pwm(MOTOR_FL, constrain(in_thr + (int16_t)(pit_err - rol_err - yaw_err), 1100, 2000));
     _motors.write_pwm(MOTOR_FR, constrain(in_thr + (int16_t)(pit_err + rol_err + yaw_err), 1100, 2000));
     _motors.write_pwm(MOTOR_RL, constrain(in_thr - (int16_t)(pit_err + rol_err - yaw_err), 1100, 2000));
     _motors.write_pwm(MOTOR_RR, constrain(in_thr - (int16_t)(pit_err - rol_err + yaw_err), 1100, 2000));
-    // Serial.print(in_thr + (int16_t)(pit_err - rol_err + yaw_err));
-    // Serial.print(" | ");
-    // Serial.print(in_thr + (int16_t)(pit_err + rol_err - yaw_err));
-    // Serial.print(" | ");
-    // Serial.print(in_thr - (int16_t)(pit_err + rol_err + yaw_err));
-    // Serial.print(" | ");
-    // Serial.print(in_thr - (int16_t)(pit_err - rol_err - yaw_err));
-    // Serial.println();
+
   }
   else {
     _motors.write_pwm(MOTOR_FL, 1000);
     _motors.write_pwm(MOTOR_FR, 1000);
     _motors.write_pwm(MOTOR_RL, 1000);
     _motors.write_pwm(MOTOR_RR, 1000);
+		yaw_target = eulers[2];
     if (in_thr < _radio._channels_min[CH_THR] + 30) {
       if (_radio_prev[CH_YAW] > _radio._channels_max[CH_YAW] - 50 && _motors.is_armed()) {
         _motors.disarm();
@@ -142,9 +236,16 @@ void FlightController::_parse_aux() {
   //_auto_level = _radio_prev[CH_AUX1] > 1500 ? true : false;
   if (_radio_prev[CH_AUX1] > 1500) {
     _auto_level = true;
+		if (reset_quat) {
+			_imu._quaternion.reset();
+			reset_quat = false;
+		}
   }
   else {
     _auto_level = false;
+		if (!reset_quat) {
+			reset_quat = true;
+		}
   }
   //_auto_level = true;
 }
